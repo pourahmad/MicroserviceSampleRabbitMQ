@@ -1,0 +1,125 @@
+version: '3.4'
+
+networks:
+  backend:
+
+services:
+  microservice_student_db:
+    container_name: microservice-student-db
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports:
+     - 6001:1433
+    environment:
+     - ACCEPT_EULA=Y
+     - SA_PASSWORD=Nasser@1234
+     - MSSQL_PID=Evaluation
+    networks:
+     - backend
+  
+  microservicesamplerabbitmq.student:
+    container_name: microservice-sample-rabbitmq-student
+    image: ${DOCKER_REGISTRY-}microservicesamplerabbitmqstudent
+    build:
+      context: .
+      dockerfile: MicroserviceSampleRabbitMQ.Student/Dockerfile
+    environment:
+     - DB_HOST=microservice_student_db
+     - DB_NAME=MicroserviceStudent
+     - DB_USERNAME=sa
+     - DB_SA_PASSWORD=Nasser@1234
+    networks:
+     - backend
+    depends_on:
+     - microservice_student_db
+  
+  microservice_question_db:
+    container_name: microservice-question-db
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports:
+     - 6002:1433
+    environment:
+     - ACCEPT_EULA=Y
+     - SA_PASSWORD=Nasser@1234
+     - MSSQL_PID=Evaluation
+    networks:
+     - backend
+
+  microservicesamplerabbitmq.question:
+    container_name: microservice-sample-rabbitmq-question
+    image: ${DOCKER_REGISTRY-}microservicesamplerabbitmqquestion
+    build:
+      context: .
+      dockerfile: MicroserviceSampleRabbitMQ.Question/Dockerfile
+    environment:
+     - DB_HOST=microservice_question_db
+     - DB_NAME=MicroserviceQuestion
+     - DB_USERNAME=sa
+     - DB_SA_PASSWORD=Nasser@1234
+    networks:
+     - backend
+    depends_on:
+     - microservice_question_db
+
+  microservice_exam_db:
+    container_name: microservice-exam-db
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports:
+     - 6003:1433
+    environment:
+     - ACCEPT_EULA=Y
+     - SA_PASSWORD=Nasser@1234
+     - MSSQL_PID=Evaluation
+    networks:
+     - backend
+
+  microservicesamplerabbitmq.exam:
+    container_name: microservice-sample-rabbitmq-exam
+    image: ${DOCKER_REGISTRY-}microservicesamplerabbitmqexam
+    build:
+      context: .
+      dockerfile: MicroserviceSampleRabbitMQ.Exam/Dockerfile
+    environment:
+     - DB_HOST=microservice_exam_db
+     - DB_NAME=MicroserviceExam
+     - DB_USERNAME=sa
+     - DB_SA_PASSWORD=Nasser@1234
+     - RABBITMQ_HOST=microservice_rabbitmq
+    networks:
+     - backend
+    depends_on:
+     - microservice_exam_db
+
+  microservice_aggregate_mongodb:
+    container_name: microservice-aggregate-mongodb
+    image: mongo
+    ports:
+     - 6004:27017
+    networks:
+     - backend
+
+  microservicesamplerabbitmq.aggregate:
+    container_name: microservice-sample-rabbitmq-aggregate
+    image: ${DOCKER_REGISTRY-}microservicesamplerabbitmqaggregate
+    build:
+      context: .
+      dockerfile: MicroserviceSampleRabbitMQ.Aggregate/Dockerfile
+    environment:
+     - MongoDbConnectionString=mongodb://microservice_aggregate_mongodb
+     - MongoDbName=MicroserviceAggregateMongodb
+     - RABBITMQ_HOST=microservice_rabbitmq 
+    networks:
+     - backend
+    depends_on:
+     - microservice_aggregate_mongodb
+
+  microservice_rabbitmq:
+    container_name: microservice-rabbitmq
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest  
+      RABBITMQ_DEFAULT_PASS: guest  
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
