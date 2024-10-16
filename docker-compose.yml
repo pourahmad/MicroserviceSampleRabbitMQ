@@ -4,6 +4,18 @@ networks:
   backend:
 
 services:
+  microservice_rabbitmq:
+    container_name: microservice-rabbitmq
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest  
+      RABBITMQ_DEFAULT_PASS: guest  
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
+
   microservice_student_db:
     container_name: microservice-student-db
     image: mcr.microsoft.com/mssql/server:2019-latest
@@ -111,15 +123,3 @@ services:
      - backend
     depends_on:
      - microservice_aggregate_mongodb
-
-  microservice_rabbitmq:
-    container_name: microservice-rabbitmq
-    image: rabbitmq:3-management
-    environment:
-      RABBITMQ_DEFAULT_USER: guest  
-      RABBITMQ_DEFAULT_PASS: guest  
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    networks:
-      - backend
